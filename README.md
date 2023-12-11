@@ -35,7 +35,7 @@
 - /blackmoney to see the amount
 
 
-# If you want to use blackmoney as an item --> (Optional Step)
+# If you want to use blackmoney as an item (Optional Step)
 
 - Add blackmoney to qbcore > config.lua
 ```lua
