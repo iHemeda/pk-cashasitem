@@ -167,7 +167,9 @@ function self.Functions.GetMoney(moneytype)
 ```
 
 
-# For core_inventory users remove this lines from `core_inventory/client/main.lua`
+# For core_inventory users ⚠️
+
+# make sure you remove this lines from `core_inventory/client/main.lua`
 
 ```lua
 Citizen.CreateThread(function()
@@ -180,7 +182,7 @@ Citizen.CreateThread(function()
     end
 end)
 ```
-# And `core_inventory/server/metadata.lua`
+# make sure you remove this lines from `core_inventory/server/metadata.lua`
 
 ```lua
 RegisterNetEvent('core_inventory:custom:updateMoney', function()
