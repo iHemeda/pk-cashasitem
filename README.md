@@ -31,8 +31,8 @@
 
 # Command
 
-- /blackmoney to see the amount
 - /cash to see the amount
+- /blackmoney to see the amount
 
 
 # If you are using blackmoney as an item
@@ -72,6 +72,131 @@ QBConfig.Money.DontAllowMinus = { 'cash', 'crypto', 'blackmoney' } -- Money that
     ['description'] = 'Black Money?'
 },
 ```
+
+
+# Make sure you have the right `self.Functions` in `[qb]/qb-core/server/player.lua` 
+
+```lua
+function self.Functions.AddMoney(moneytype, amount, reason)
+        reason = reason or 'unknown'
+        moneytype = moneytype:lower()
+        amount = tonumber(amount)
+        if amount < 0 then return end
+        if not self.PlayerData.money[moneytype] then return false end
+        self.PlayerData.money[moneytype] = self.PlayerData.money[moneytype] + amount
+
+        if not self.Offline then
+            self.Functions.UpdatePlayerData()
+            if amount > 100000 then
+                TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'AddMoney', 'lightgreen', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') added, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype] .. ' reason: ' .. reason, true)
+            else
+                TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'AddMoney', 'lightgreen', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') added, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype] .. ' reason: ' .. reason)
+            end
+            TriggerClientEvent('hud:client:OnMoneyChange', self.PlayerData.source, moneytype, amount, false)
+            TriggerClientEvent('QBCore:Client:OnMoneyChange', self.PlayerData.source, moneytype, amount, 'add', reason)
+            TriggerEvent('QBCore:Server:OnMoneyChange', self.PlayerData.source, moneytype, amount, 'add', reason)
+        end
+
+        return true
+    end
+```
+
+```lua
+function self.Functions.RemoveMoney(moneytype, amount, reason)
+        reason = reason or 'unknown'
+        moneytype = moneytype:lower()
+        amount = tonumber(amount)
+        if amount < 0 then return end
+        if not self.PlayerData.money[moneytype] then return false end
+        for _, mtype in pairs(QBCore.Config.Money.DontAllowMinus) do
+            if mtype == moneytype then
+                if (self.PlayerData.money[moneytype] - amount) < 0 then
+                    return false
+                end
+            end
+        end
+        self.PlayerData.money[moneytype] = self.PlayerData.money[moneytype] - amount
+
+        if not self.Offline then
+            self.Functions.UpdatePlayerData()
+            if amount > 100000 then
+                TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'RemoveMoney', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') removed, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype] .. ' reason: ' .. reason, true)
+            else
+                TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'RemoveMoney', 'red', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') removed, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype] .. ' reason: ' .. reason)
+            end
+            TriggerClientEvent('hud:client:OnMoneyChange', self.PlayerData.source, moneytype, amount, true)
+            if moneytype == 'bank' then
+                TriggerClientEvent('qb-phone:client:RemoveBankMoney', self.PlayerData.source, amount)
+            end
+            TriggerClientEvent('QBCore:Client:OnMoneyChange', self.PlayerData.source, moneytype, amount, 'remove', reason)
+            TriggerEvent('QBCore:Server:OnMoneyChange', self.PlayerData.source, moneytype, amount, 'remove', reason)
+        end
+
+        return true
+    end
+```
+
+```lua
+function self.Functions.SetMoney(moneytype, amount, reason)
+        reason = reason or 'unknown'
+        moneytype = moneytype:lower()
+        amount = tonumber(amount)
+        if amount < 0 then return false end
+        if not self.PlayerData.money[moneytype] then return false end
+        local difference = amount - self.PlayerData.money[moneytype]
+        self.PlayerData.money[moneytype] = amount
+
+        if not self.Offline then
+            self.Functions.UpdatePlayerData()
+            TriggerEvent('qb-log:server:CreateLog', 'playermoney', 'SetMoney', 'green', '**' .. GetPlayerName(self.PlayerData.source) .. ' (citizenid: ' .. self.PlayerData.citizenid .. ' | id: ' .. self.PlayerData.source .. ')** $' .. amount .. ' (' .. moneytype .. ') set, new ' .. moneytype .. ' balance: ' .. self.PlayerData.money[moneytype] .. ' reason: ' .. reason)
+            TriggerClientEvent('hud:client:OnMoneyChange', self.PlayerData.source, moneytype, math.abs(difference), difference < 0)
+            TriggerClientEvent('QBCore:Client:OnMoneyChange', self.PlayerData.source, moneytype, amount, 'set', reason)
+            TriggerEvent('QBCore:Server:OnMoneyChange', self.PlayerData.source, moneytype, amount, 'set', reason)
+        end
+
+        return true
+    end
+```
+
+```lua
+function self.Functions.GetMoney(moneytype)
+        if not moneytype then return false end
+        moneytype = moneytype:lower()
+        return self.PlayerData.money[moneytype]
+    end
+```
+
+
+# For core_inventory users remove this lines from `core_inventory/client/main.lua`
+
+```lua
+Citizen.CreateThread(function()
+    while true do
+        if playerLoaded then
+            TriggerServerEvent('core_inventory:custom:updateMoney')
+        else 
+        end
+      Wait(1000)
+    end
+end)
+```
+# And `core_inventory/server/metadata.lua`
+
+```lua
+RegisterNetEvent('core_inventory:custom:updateMoney', function()
+  local Player = QBCore.Functions.GetPlayer(source)
+  local PlayerMoney = Player.PlayerData.money.cash
+  local DinherioMao = exports['core_inventory']:getItem('content-'..Player.PlayerData.citizenid, 'cash')
+  local TotalMao = DinherioMao.amount
+  print(DinherioMao.amount)
+ 
+  if PlayerMoney ~= TotalMao then
+    Player.Functions.SetMoney("cash",TotalMao)
+  end
+end)
+```
+# If you have not added these line previously, skip this step 
+
 
 
 # LICENSE
