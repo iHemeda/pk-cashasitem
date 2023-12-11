@@ -195,7 +195,7 @@ RegisterNetEvent('core_inventory:custom:updateMoney', function()
   end
 end)
 ```
-# If you have not added these line previously, skip this step 
+# If you have not added these lines previously, skip this step 
 
 
 
