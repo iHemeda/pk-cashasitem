@@ -12,7 +12,7 @@
 # pk-cashasitem
 
 - Use cash or blackmonmey as item for qb-core
-- Blackmoney item as option you can use instead of MarkedBills
+- Blackmoney item as option you can use instead of MarkedBills (Optional)
 - Works with any inventory system
 - Works with any banking system
 
@@ -35,7 +35,7 @@
 - /blackmoney to see the amount
 
 
-# If you are using blackmoney as an item
+# If you want to use blackmoney as an item --> (Optional Step)
 
 - Add blackmoney to qbcore > config.lua
 ```lua
