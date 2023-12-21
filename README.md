@@ -167,8 +167,9 @@ function self.Functions.GetMoney(moneytype)
 ```
 
 
-# For core_inventory users (if you have issue with updating money) ⚠️
+# For core_inventory users ⚠️
 
+# If you have issue with updating money
 # Add this lines at the bottom of `core_inventory/client/main.lua`
 
 ```lua
