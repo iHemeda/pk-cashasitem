@@ -167,9 +167,9 @@ function self.Functions.GetMoney(moneytype)
 ```
 
 
-# For core_inventory users ⚠️
+# For core_inventory users (if you have issue with updating money) ⚠️
 
-# Remove this lines from `core_inventory/client/main.lua`
+# Add this lines at the bottom of `core_inventory/client/main.lua`
 
 ```lua
 Citizen.CreateThread(function()
@@ -178,26 +178,26 @@ Citizen.CreateThread(function()
             TriggerServerEvent('core_inventory:custom:updateMoney')
         else 
         end
-      Wait(1000)
+      Wait(500)
     end
 end)
 ```
-# Remove this lines from `core_inventory/server/metadata.lua`
+# Add this lines to `core_inventory/server/metadata.lua`
 
 ```lua
 RegisterNetEvent('core_inventory:custom:updateMoney', function()
   local Player = QBCore.Functions.GetPlayer(source)
   local PlayerMoney = Player.PlayerData.money.cash
-  local DinherioMao = exports['core_inventory']:getItem('content-'..Player.PlayerData.citizenid, 'cash')
-  local TotalMao = DinherioMao.amount
-  print(DinherioMao.amount)
+  local MoneyAmount = exports['core_inventory']:getItem('content-'..Player.PlayerData.citizenid, 'cash')
+  local TotalMoney = MoneyAmount.amount
+  print(MoneyAmount.amount)
  
-  if PlayerMoney ~= TotalMao then
-    Player.Functions.SetMoney("cash",TotalMao)
+  if PlayerMoney ~= TotalMoney then
+    Player.Functions.SetMoney("cash",TotalMoney)
   end
 end)
 ```
-# If you haven't added these lines, skip this step
+# If you don't have any issues with updating money, skip this step
 
 
 
